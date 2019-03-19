@@ -1,8 +1,10 @@
 # Arabic Speech Recognition Using Kaldi
-Kaldi is a toolkit for speech recognition written in C++ and licensed it is intended for use by speech recognition researchers. According to legend, Kaldi (Khaled) was the Ethiopian goat herder who discovered the coffee plant.
+Kaldi is a toolkit for speech recognition written in C++ and licensed it is intended for use by speech recognition researchers. Kaldi aims to provide software that is flexible and extensible. It supports linear transforms, MMI, boosted MMI and MCE discriminative training, feature-space discriminative training, and deep neural networks.
+Kaldi has been incorporated as part of the CHiME Speech Separation and Recognition Challenge over several successive events. The software was initially developed as part of a 2009 workshop at Johns Hopkins University.
+According to legend, Kaldi (Khaled) was the Ethiopian goat herder who discovered the coffee plant.
 
 <p align="center">
-<img src="https://www.coffeecrossroads.com/wp-content/uploads/kaldi-adapted-from-uker.png" /> 
+<img src="https://www.coffeecrossroads.com/wp-content/uploads/kaldi-adapted-from-uker.png"  height="400" width="600"/> 
 </p>
 
 
@@ -14,8 +16,8 @@ git clone  https://github.com/kaldi-asr/kaldi.git
 ```
 This repo is about 200MB, so it would take some time. After downloading, a new folder named “kaldi” is created. There are a few files and sub-directories which are:
 
-- `egs` – example scripts allowing you to quickly build ASR systems for over 30 popular speech corpora (documentation is attached for each project),
-  - `misc` – additional tools and supplies, not needed for proper Kaldi functionality,
+- `egs` – example scripts allowing you to quickly build ASR systems for over 30 popular speech corpora (documentation is attached for each project).
+- `misc` – additional tools and supplies, not needed for proper Kaldi functionality.
 - `src` – Kaldi source code.
  - `tools` – useful components and external tools.
  - `windows` – tools for running Kaldi using Windows.
