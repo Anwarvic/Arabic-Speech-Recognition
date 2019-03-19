@@ -24,12 +24,15 @@ The most important one are `tools/`, `src/`, and `egs/` that will be discussed i
 
 
 ### 1. “tools/” sub-directory
+
 The directory "tools/' is where we install things that Kaldi depends on in various ways. Look very quickly at the file`INSTALL` which gives instructions on how to install the tools. The most important sub-directory of “tools/” is “openfst/”. OpenFst is a library for constructing, combining, optimizing, and searching weighted finite-state transducers (FSTs). If you ever want to understand Kaldi deeply you will need to understand OpenFst. For this, the best starting point is here.
 
 ### 2. “src/” sub-directory
+
 The directory "src/' is where all the code and executables (binary files which is ended by “.bin”) are located. Inside this directory, you will see a few files and a large number of sub-directories. You can test the existing code/files by running make test. This command goes into the various sub-directories and runs test programs in there. All the tests should succeed. 
 
 ### 3.“egs/” sub-directory
+
 The directory "egs/' is where example scripts are located allowing us to quickly build ASR systems for over 30 popular speech corpora (documentation is attached for each project).
 
 ## Prerequisites
