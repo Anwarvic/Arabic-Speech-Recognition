@@ -1,4 +1,4 @@
-# Arabic-Speech-Recognition
+# Arabic Speech Recognition
 In this repoitory, I'm going to create an Automatic Speech Recognition model for Arabic language using a couple of the most famous Automatic Speech Recognition free-ware framework:
 
 - [Kaldi](http://kaldi-asr.org/): The most famous ASR framework.
