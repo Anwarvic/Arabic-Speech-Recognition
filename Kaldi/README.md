@@ -69,7 +69,7 @@ And probably these have to be installed:
 - `perl` – dynamic programming language, perfect for text files processing.
 
 ## Install
-The main source for installing Kaldi can be found [here](http://jrmeyer.github.io/asr/2016/01/26/Installing-Kaldi.html), but these are a simplified summarization:
+The best source for installing Kaldi can be found [here](http://jrmeyer.github.io/asr/2016/01/26/Installing-Kaldi.html), but this is a simplified summarization:
 
 - get into “tools” directory inside that folder using cd kaldi/tools.
 - Check the number of cores in your processor by running nproc. The number returned from that should be used in the following command. In my case, the number was `4`.
@@ -78,3 +78,6 @@ The main source for installing Kaldi can be found [here](http://jrmeyer.github.i
 - Then run `./configure`
 - Then `make depend -j 4`.
 - Finally, run `make -j 4`.
+
+## Data Preparation
+I have created a file that is responsible for preparing the audio data, mappig files and tra
