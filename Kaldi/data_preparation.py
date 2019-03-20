@@ -17,10 +17,8 @@ class DataOrganizer():
         #name of the dataset in kaldi
         self.dataset = "arabic_corpus_of_isolated_words" 
         #TODO: You MUST Modify this member variable
-        #pass the location of the downloaded data
         self.indir = "/media/anwar/D/Data/ASR/Arabic_Corpus_of_Isolated_Words"
         #TODO: You MUST Modify this member variable
-        #pass the 'egs' location where kaldi is installed
         self.basedir = "/media/anwar/E/ASR/Kaldi/kaldi/egs"
         
         #set constant directories
@@ -286,8 +284,6 @@ class DataOrganizer():
                     dst=os.path.join(self.OUTDIR, "run.sh"))
         #create path.sh
         create_path_sh(self.OUTDIR)
-
-
 
 
     def prepare_data(self):
