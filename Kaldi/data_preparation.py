@@ -22,8 +22,8 @@ class DataOrganizer():
         self.basedir = "/media/anwar/E/ASR/Kaldi/kaldi/egs"
         
         #start/end symbols
-        self.START = "<s>"
-        self.END = "</s>"
+        # self.START = "<s>"
+        # self.END = "</s>"
         
         #set constant directories
         self.OUTDIR = os.path.join(self.basedir, self.dataset)
@@ -123,7 +123,7 @@ class DataOrganizer():
         NOTE: all speakers are male
         """
         with open(os.path.join(group_dir, "spk2gender"), "w") as fout:
-            for speaker in os.listdir(group_dir):
+            for speaker in sorted(os.listdir(group_dir)):
                 if os.path.isdir(os.path.join(group_dir, speaker)):
                     fout.write("{} {}\n".format(speaker, "m"))
 
@@ -135,14 +135,15 @@ class DataOrganizer():
         that is unique for each audio file in the data
         """
         with open(os.path.join(group_dir, "wav.scp"), "w") as fout:
-            for speaker in os.listdir(group_dir):
-                if os.path.isdir(os.path.join(group_dir, speaker)):
-                    wav_files = os.listdir(os.path.join(group_dir, speaker))
-                    for wav_file in sorted(wav_files):
-                        absPath = os.path.join(group_dir, wav_file)
-                        fout.write(
-                            "{}_{} {}\n".format(speaker, wav_file[:-4], absPath)
-                            )
+            for speaker in sorted(os.listdir(group_dir)):
+                if re.match(r"S\d+", speaker):
+                    if os.path.isdir(os.path.join(group_dir, speaker)):
+                        wav_files = os.listdir(os.path.join(group_dir, speaker))
+                        for wav_file in sorted(wav_files):
+                            absPath = os.path.join(group_dir, speaker, wav_file)
+                            fout.write(
+                                "{}_{} {}\n".format(speaker, wav_file[:-4], absPath)
+                                )
 
 
     def __create_text(self, group_dir):
@@ -152,14 +153,14 @@ class DataOrganizer():
         <utterance id> <text>
         """
         with open(os.path.join(group_dir, "text"), "w") as fout:
-            for speaker in os.listdir(group_dir):
+            for speaker in sorted(os.listdir(group_dir)):
                 if re.match(r"S\d+", speaker):
                     wav_files = os.listdir(os.path.join(group_dir, speaker))
                     for wav_file in sorted(wav_files):
                         speaker, rep, wordId, ext = wav_file.split(".")
-                        fout.write("{}_{} {} {} {}\n"\
+                        fout.write("{}_{} {}\n"\
                             .format(speaker, wav_file[:-4],
-                                    self.START, self.WORDS[int(wordId)-1], self.END))
+                                    self.WORDS[int(wordId)-1]))
 
 
     def __create_utt2spk(self, group_dir):
@@ -169,7 +170,7 @@ class DataOrganizer():
         <utterance_id> <speaker>
         """
         with open(os.path.join(group_dir, "utt2spk"), "w") as fout:
-            for speaker in os.listdir(group_dir):
+            for speaker in sorted(os.listdir(group_dir)):
                 if os.path.isdir(os.path.join(group_dir, speaker)):
                     wav_files = os.listdir(os.path.join(group_dir, speaker))
                     for wav_file in sorted(wav_files):
@@ -209,15 +210,16 @@ class DataOrganizer():
             phoneme_lines = fin2.readlines()
             assert len(text_lines) == len(phoneme_lines), \
                 "There is an error in the phenomizer!!"
-        dict_dir = os.path.join(local_dir, "dict")
+        dict_dir = os.path.join(local_dir, "dict")  
         safe_makedir(dict_dir)
         with open(os.path.join(dict_dir, "lexicon.txt"), "w") as fout:
+            #add SIL and <UNK>
+            fout.write("!SIL sil\n")
+            fout.write("<UNK> spn\n")
             for txt, ph in zip(text_lines, phoneme_lines):
                 txt = txt.strip()
                 ph = " ".join(splitPhone(ph))
                 fout.write("{} {}\n".format(txt, ph))
-            #add <UNK>
-            fout.write("<UNK> spn\n")
         os.remove(os.path.join(local_dir, "corpus.txt.ph"))
 
 
@@ -267,8 +269,6 @@ class DataOrganizer():
         This method is used to copy certain files from the 'egs' directory at
         Kaldi. Instead of copying the whole archive, we will create symbolik link
         of these files. symbolic link is like a shortcut.
-        I create simulink using 'ln -s' command in ubuntu,I don't like
-        os.symlink() in python!!
         """
         archive_path = os.path.abspath("archive")
         #copy archive/utils
@@ -338,7 +338,7 @@ class DataOrganizer():
                         'r', 's', 't', 'w', 'x', 'y', '¥', '€']
         self.__create_non_silence_phones(dict_dir, phones=phones_list)
         #create silence phones
-        self.__create_silence_phones(dict_dir, silence_phones=["sil", "spn", self.START, self.END])
+        self.__create_silence_phones(dict_dir, silence_phones=["sil", "spn"]) #HERE (, self.START, self.END)
         self.__create_optional_silence(dict_dir, optional_phones=["sil"])
 
         # ----- Copy Data -----
