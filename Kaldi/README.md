@@ -90,18 +90,17 @@ After running this script, a new directory with the name of `dataset` variable w
 ├── arabic_corpus_of_isolated_words
     ├── conf
     │   ├── mfcc.conf
-    │   └── topo_orig.proto
+    │   └── decode.config
     ├── data
-    │   ├── train
-    │       ├── S01
-    │       ├── S02
-    │       ├── S04
-    │       ├── ...
-    │       ├── spk2gender
-    │       ├── text
-    │       ├── utt2spk
-    │       ├── wav.scp
-    │   └── test
+    │	 ├── local
+    │	 │    ├── dict
+    │	 │       ├── lexicon.txt
+    │	 │       ├── nonsilence_phones.txt
+    │	 │       ├── optional_silence.txt
+    │	 │       └── silence_phones.txt
+    │	 │    ├── corpus.txt
+    │	 │    └── score.sh
+    │   ├── test
     │       ├── S03
     │       ├── S18
     │       ├── S12
@@ -109,14 +108,16 @@ After running this script, a new directory with the name of `dataset` variable w
     │       ├── spk2gender
     │       ├── text
     │       ├── utt2spk
-    │       ├── wav.scp
-    ├── local
-    │   ├── dict
-    │       ├── lexicon.txt
-    │       ├── nonsilence_phones.txt
-    │       ├── optional_silence.txt
-    │       ├── silence_phones.txt
-    │   └── corpus.txt
+    │       └── wav.scp 
+    │   └── train4
+    │       ├── S01
+    │       ├── S02
+    │       ├── S04
+    │       ├── ...
+    │       ├── spk2gender
+    │       ├── text
+    │       ├── utt2spk
+    │       └── wav.scp
     ├── steps -> ../../wsj/s5/steps
     ├── utils -> ../../wsj/s5/utils
     ├── cmd.sh
@@ -261,9 +262,12 @@ Output: _ t s @ h _
 [Mar 20 15:09:33] INFO [main] [com.univox.PhonemizerMain:90] - *****************************************************************************
 ```
 **Very Imporant**:
-Starting from the thrid line in the previous output; you won't get these lines as these are related to the phenomizer that I used. The previous script uses a certain phenomizer (software that converts text word to a sequence of phoemes like صفر -> S F R). I can't share mine with you as it doesn't belong to me. You need to create yours.
+Starting from the thrid line in the previous output; you won't get these lines as these are related to the phenomizer that I used. A phenomizer is a software that converts text word to a sequence of phoemes like `صفر` to `S F R`. I can't share the one that I used with you as it doesn't belong to me. You need to create yours.
 
 ## Train Model
 Now, we have prepared our data for training. You can do that simply by running `run.sh` shell script in the root directory of the data. Mine is `/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words` which is the same as `indir` member variable.
 
+If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. Here is mine for reference:
+```
+```
 TO BE CONTINUED :)
