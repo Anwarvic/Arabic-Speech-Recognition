@@ -267,7 +267,8 @@ Starting from the thrid line in the previous output; you won't get these lines a
 ## Train Model
 Now, we have prepared our data for training. You can do that simply by running `run.sh` shell script in the root directory of the data. Mine is `/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words` which is the same as `indir` member variable.
 
-If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. Here is mine for reference:
-```
-```
+If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. Here is [mine](http://www.mediafire.com/file/m43428auuz1i2k8/run_log.txt/file). You can download it for reference.
+
+The decoding results in the terminal window, go to newly made `kaldi/egs/DATASET/exp` where `DATASET` is the name of the dataset (mine is `arabic_cropus_of_isolated_words`. You may notice there folders with `mono` and `tri1` results as well - directories structure are the same. Here you may find result files named in a `wer_{number}` way. Logs for decoding process may be found in log folder in the same same directory.
+
 TO BE CONTINUED :)
