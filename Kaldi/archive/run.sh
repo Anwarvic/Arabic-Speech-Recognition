@@ -19,7 +19,9 @@ echo
 # utt2spk     [<uterranceID> <speakerID>]
 # corpus.txt  [<text_transcription>]
 # Making spk2utt files
+echo "create spk2utt for training"
 utils/utt2spk_to_spk2utt.pl data/train/utt2spk > data/train/spk2utt
+echo "create spk2utt for testing"
 utils/utt2spk_to_spk2utt.pl data/test/utt2spk > data/test/spk2utt
 echo
 echo "===== FEATURES EXTRACTION ====="
