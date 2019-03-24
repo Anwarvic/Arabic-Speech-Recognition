@@ -136,9 +136,9 @@ if [ $stage -le 0 ]; then
 fi
 
 if ! $skip_scoring ; then
-  [ ! -x local/score.sh ] && \
-    echo "Not scoring because local/score.sh does not exist or not executable." && exit 1;
-  local/score.sh --cmd "$cmd" $scoring_opts $data $graphdir $dir
+  [ ! -x data/local/score.sh ] && \
+    echo "Not scoring because data/local/score.sh does not exist or not executable." && exit 1;
+  data/local/score.sh --cmd "$cmd" $scoring_opts $data $graphdir $dir
 fi
 
 exit 0;

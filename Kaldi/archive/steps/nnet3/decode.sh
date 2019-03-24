@@ -146,11 +146,11 @@ fi
 # different acoustic scales to get the final output.
 if [ $stage -le 3 ]; then
   if ! $skip_scoring ; then
-    [ ! -x local/score.sh ] && \
-      echo "Not scoring because local/score.sh does not exist or not executable." && exit 1;
+    [ ! -x data/local/score.sh ] && \
+      echo "Not scoring because data/local/score.sh does not exist or not executable." && exit 1;
     echo "score best paths"
     [ "$iter" != "final" ] && iter_opt="--iter $iter"
-    local/score.sh $scoring_opts --cmd "$cmd" $data $graphdir $dir
+    data/local/score.sh $scoring_opts --cmd "$cmd" $data $graphdir $dir
     echo "score confidence and timing with sclite"
   fi
 fi

@@ -160,9 +160,9 @@ fi
 
 # Run the scoring
 if ! $skip_scoring ; then
-  [ ! -x local/score.sh ] && \
-    echo "Not scoring because local/score.sh does not exist or not executable." && exit 1;
-  local/score.sh $scoring_opts --cmd "$cmd" $data $graphdir $dir || exit 1;
+  [ ! -x data/local/score.sh ] && \
+    echo "Not scoring because data/local/score.sh does not exist or not executable." && exit 1;
+  data/local/score.sh $scoring_opts --cmd "$cmd" $data $graphdir $dir || exit 1;
 fi
 
 exit 0;
