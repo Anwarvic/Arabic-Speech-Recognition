@@ -15,11 +15,15 @@ class DataOrganizer():
     def __init__(self):
         #TODO: You can Modify this member variable
         #name of the dataset in kaldi
-        self.dataset = "arabic_corpus_of_isolated_words" 
+        self.dataset = "arabic_corpus_of_isolated_words"
         #TODO: You MUST Modify this member variable
         self.indir = "/media/anwar/D/Data/ASR/Arabic_Corpus_of_Isolated_Words"
         #TODO: You MUST Modify this member variable
         self.basedir = "/media/anwar/E/ASR/Kaldi/kaldi/egs"
+        
+        #start/end symbols
+        self.START = "<s>"
+        self.END = "</s>"
         
         #set constant directories
         self.OUTDIR = os.path.join(self.basedir, self.dataset)
@@ -149,13 +153,13 @@ class DataOrganizer():
         """
         with open(os.path.join(group_dir, "text"), "w") as fout:
             for speaker in os.listdir(group_dir):
-                if os.path.isdir(os.path.join(group_dir, speaker)):
+                if re.match(r"S\d+", speaker):
                     wav_files = os.listdir(os.path.join(group_dir, speaker))
                     for wav_file in sorted(wav_files):
                         speaker, rep, wordId, ext = wav_file.split(".")
-                        fout.write("{}_{} {}\n"\
+                        fout.write("{}_{} {} {} {}\n"\
                             .format(speaker, wav_file[:-4],
-                                    self.WORDS[int(wordId)-1]))
+                                    self.START, self.WORDS[int(wordId)-1], self.END))
 
 
     def __create_utt2spk(self, group_dir):
@@ -212,10 +216,12 @@ class DataOrganizer():
                 txt = txt.strip()
                 ph = " ".join(splitPhone(ph))
                 fout.write("{} {}\n".format(txt, ph))
+            #add <UNK>
+            fout.write("<UNK> spn\n")
         os.remove(os.path.join(local_dir, "corpus.txt.ph"))
 
 
-    def __create_non_silence_phones(self, dict_dir, non_silence_phones):
+    def __create_non_silence_phones(self, dict_dir, phones):
         """
         This method is used to create non_silence phones (also
         called filler words). These phones are the phones that
@@ -224,8 +230,9 @@ class DataOrganizer():
         This method should write these non_silence_phones into a text
         file called 'non_silence_phones.txt'
         """
+        assert len(phones)>0, "phones list can NOT be empty"
         with open(os.path.join(dict_dir, "nonsilence_phones.txt"), "w") as fout:
-            for ph in non_silence_phones:
+            for ph in phones:
                 fout.write("{}\n".format(ph))
 
 
@@ -296,9 +303,9 @@ class DataOrganizer():
         safe_makedir(self.TRAIN_DIR)
         
         # ----- Prepare Audio Data -----
-        train_wavfiles, test_wavfiles = self.__getAudioFiles()
-        self.__prepare_audio_by_group(train_wavfiles, self.TRAIN_DIR)
-        self.__prepare_audio_by_group(test_wavfiles, self.TEST_DIR)
+        # train_wavfiles, test_wavfiles = self.__getAudioFiles()
+        # self.__prepare_audio_by_group(train_wavfiles, self.TRAIN_DIR)
+        # self.__prepare_audio_by_group(test_wavfiles, self.TEST_DIR)
 
         # ----- Prepare Mapping Files -----
         #create 'spk2gender'
@@ -315,7 +322,7 @@ class DataOrganizer():
         self.__create_utt2spk(self.TEST_DIR)
 
         # ----- Prepare Local corpus -----
-        local_dir = os.path.join(self.OUTDIR, "local")
+        local_dir = os.path.join(self.OUTDIR, "data", "local")
         safe_makedir(local_dir)
         #create corpus
         self.__create_corpus(local_dir)
@@ -325,10 +332,14 @@ class DataOrganizer():
         safe_makedir(dict_dir)
         #create lexicon
         self.__create_lexicon(local_dir, dict_dir)
+        #create phones used by the phonemizer
+        phones_list = [ '$', '@', 'A', 'P', 'R', 'S', 'T', 'a', 'a2',
+                        'b', 'd', 'f', 'h', 'i', 'i2', 'l', 'm', 'n',
+                        'r', 's', 't', 'w', 'x', 'y', '¥', '€']
+        self.__create_non_silence_phones(dict_dir, phones=phones_list)
         #create silence phones
-        self.__create_non_silence_phones(dict_dir, non_silence_phones=[])
-        self.__create_silence_phones(dict_dir, silence_phones=["sil", "spn"])
-        self.__create_optional_silence(dict_dir, optional_phones=[])
+        self.__create_silence_phones(dict_dir, silence_phones=["sil", "spn", self.START, self.END])
+        self.__create_optional_silence(dict_dir, optional_phones=["sil"])
 
         # ----- Copy Data -----
         self.__copy_files()
