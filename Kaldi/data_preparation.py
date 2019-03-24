@@ -282,7 +282,7 @@ class DataOrganizer():
                             dst=os.path.join(self.OUTDIR, "conf"))
         #copy score.sh
         shutil.copy(src=os.path.join(archive_path, "score.sh"),
-                    dst=os.path.join(self.OUTDIR, "score.sh"))
+                    dst=os.path.join(self.OUTDIR, "data", "local", "score.sh"))
         #copy cmd.sh
         shutil.copy(src=os.path.join(archive_path, "cmd.sh"),
                     dst=os.path.join(self.OUTDIR, "cmd.sh"))
@@ -303,9 +303,9 @@ class DataOrganizer():
         safe_makedir(self.TRAIN_DIR)
         
         # ----- Prepare Audio Data -----
-        # train_wavfiles, test_wavfiles = self.__getAudioFiles()
-        # self.__prepare_audio_by_group(train_wavfiles, self.TRAIN_DIR)
-        # self.__prepare_audio_by_group(test_wavfiles, self.TEST_DIR)
+        train_wavfiles, test_wavfiles = self.__getAudioFiles()
+        self.__prepare_audio_by_group(train_wavfiles, self.TRAIN_DIR)
+        self.__prepare_audio_by_group(test_wavfiles, self.TEST_DIR)
 
         # ----- Prepare Mapping Files -----
         #create 'spk2gender'
