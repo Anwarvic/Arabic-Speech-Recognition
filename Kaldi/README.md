@@ -265,4 +265,5 @@ Starting from the thrid line in the previous output; you won't get these lines a
 
 ## Train Model
 Now, we have prepared our data for training. You can do that simply by running `run.sh` shell script in the root directory of the data. Mine is `/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words` which is the same as `indir` member variable.
+
 TO BE CONTINUED :)
