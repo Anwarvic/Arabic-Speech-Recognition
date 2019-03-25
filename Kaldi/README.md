@@ -298,8 +298,9 @@ This command consists of four parts:
 - `S03_S03.01.01`: which is the utterance id of the test file`S03.01.01.wav`.
 - `./exp/mono.deocde/lat.1.gz`: which is the lattic-ark object.
 - `./exp/mono/graph/words.txt`: which is the filet that contain words and their ids.
-The lattice visualization of this particular file should look like this:
+The output of this command should be a pdf file named `S03_03.01.01.pdf` at the current directory containing lattice visualization that looks like this:
 
 <p align="center">
 <img src="http://www.mediafire.com/convkey/c33b/rqp3f93esks1b3azg.jpg"  height="200" width="400"/> 
 </p>
+
