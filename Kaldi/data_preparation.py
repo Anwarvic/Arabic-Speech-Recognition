@@ -112,7 +112,6 @@ class DataOrganizer():
             shutil.copyfile(filepath, newFilepath)
 
 
-
     def __create_spk2gender(self, group_dir):
         """
         This method is used to create spk2gender file that maps the 
