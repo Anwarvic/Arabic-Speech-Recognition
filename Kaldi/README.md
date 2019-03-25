@@ -304,6 +304,6 @@ The output of this command should be a pdf file named `S03_03.01.01.pdf` at the 
 <img src="http://www.mediafire.com/convkey/c33b/rqp3f93esks1b3azg.jpg"  height="200" width="400"/> 
 </p>
 
-You can open the `utils/decode` file and change the `lm_scale` and `acoustic_scale` parameters. Here, I used the zero values.
+You can open the `utils/show_lattice.sh` file and change the `lm_scale` and `acoustic_scale` parameters. Here, I used the zero values.
 
 TO BE CONTINUEUED :)
