@@ -21,20 +21,7 @@ This repo is about 200MB, so it would take some time. After downloading, a new f
  - `tools` – useful components and external tools.
  - `windows` – tools for running Kaldi using Windows.
 
-The most important one are `tools/`, `src/`, and `egs/` that will be discussed in more details.
-
-
-### 1. “tools/” sub-directory
-
-The directory "tools/' is where we install things that Kaldi depends on in various ways. Look very quickly at the file`INSTALL` which gives instructions on how to install the tools. The most important sub-directory of “tools/” is “openfst/”. OpenFst is a library for constructing, combining, optimizing, and searching weighted finite-state transducers (FSTs). If you ever want to understand Kaldi deeply you will need to understand OpenFst. For this, the best starting point is here.
-
-### 2. “src/” sub-directory
-
-The directory "src/' is where all the code and executables (binary files which is ended by “.bin”) are located. Inside this directory, you will see a few files and a large number of sub-directories. You can test the existing code/files by running make test. This command goes into the various sub-directories and runs test programs in there. All the tests should succeed. 
-
-### 3.“egs/” sub-directory
-
-The directory "egs/' is where example scripts are located allowing us to quickly build ASR systems for over 30 popular speech corpora (documentation is attached for each project).
+The most important one are `tools/`, `src/`, and `egs/`.
 
 ## Prerequisites
 Kaldi is pretty stable, but there are some prerequisites that need to be installed:
@@ -79,7 +66,7 @@ The best source for installing Kaldi can be found [here](http://jrmeyer.github.i
 - Finally, run `make -j 4`.
 
 ## Data Preparation
-I have created a file that is responsible for preparing the files that Kaldi needs to train the model. The file responsible for that is called `data_preparation.py`. For more understanding about the code and what are the functionality inside it, you can check the official kadli documentation from [here](http://kaldi-asr.org/doc/kaldi_for_dummies.html). To run this script, all you have to install is `tqdm` pythn module. And all you need to chage about this script is these member variables:
+I have created a file that is responsible for preparing the files that Kaldi needs to train the model. The file responsible for that is called `data_preparation.py`. For more understanding about the code and what are the functionality inside it, you can check the official kadli documentation from [here](http://kaldi-asr.org/doc/kaldi_for_dummies.html). To run this script, all you have to do is install is `tqdm` pythn module. And all you need to chage about this script is these member variables:
 
 - `dataset`: Which is the name of the dataset. I have set this variable to `arabic_corpus_of_isolated_words`.
 - `indir`: Which is the full path of the downloaded data.
@@ -267,8 +254,52 @@ Starting from the thrid line in the previous output; you won't get these lines a
 ## Train Model
 Now, we have prepared our data for training. You can do that simply by running `run.sh` shell script in the root directory of the data. Mine is `/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words` which is the same as `indir` member variable.
 
-If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. Here is [mine](http://www.mediafire.com/file/m43428auuz1i2k8/run_log.txt/file). You can download it for reference.
+If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. [Here is](http://www.mediafire.com/file/m43428auuz1i2k8/run_log.txt/file) my terminal output that you should get something similar to it, you can download it for reference.
 
-The decoding results in the terminal window, go to newly made `kaldi/egs/DATASET/exp` where `DATASET` is the name of the dataset (mine is `arabic_cropus_of_isolated_words`. You may notice there folders with `mono` and `tri1` results as well - directories structure are the same. Here you may find result files named in a `wer_{number}` way. Logs for decoding process may be found in log folder in the same same directory.
 
-TO BE CONTINUED :)
+## Getting Results
+The decoding results in the terminal window, go to newly made `kaldi/egs/DATASET/exp` where `DATASET` is the name of the dataset (mine is `arabic_cropus_of_isolated_words`. You may notice there folders with `mono` and `tri1` results as well. Here you may find result files named in a `wer_{number}` way.
+
+The test Word Error Rate of your trained model can be found inside `exp/X/decode/wer_{number}` where `X` is the trained model name. For example, the `wer_17` of the HMM mono model can be found at `exp/mono/deocde/wer_17` which would look like this:
+```
+compute-wer --text --mode=present ark:exp/mono/decode/scoring/test_filt.txt ark,p:- 
+%WER 0.80 [ 16 / 2000, 3 ins, 0 del, 13 sub ]
+%SER 0.80 [ 16 / 2000 ]
+Scored 2000 sentences, 0 not present in hyp.
+```
+As we can see, our HMM mono model got a wer (word error rate) of `0.80%` with getting only 16 wrong. if you want to do more analysis and see which words our model got it wrong, you can check `exp/mono/decode/log/decode.1.log` file which would look like this:
+```
+S03_S03.01.01 صفر 
+LOG (gmm-latgen-faster[5.5.249~1-461b5]:DecodeUtteranceLatticeFaster():decoder-wrappers.cc:289) Log-like per frame for utterance S03_S03.01.01 is -8.33501 over 94 frames.
+S03_S03.01.02 واحد 
+LOG (gmm-latgen-faster[5.5.249~1-461b5]:DecodeUtteranceLatticeFaster():decoder-wrappers.cc:289) Log-like per frame for utterance S03_S03.01.02 is -8.19328 over 98 frames.
+S03_S03.01.03 إثنان 
+LOG (gmm-latgen-faster[5.5.249~1-461b5]:DecodeUtteranceLatticeFaster():decoder-wrappers.cc:289) Log-like per frame for utterance S03_S03.01.03 is -8.0858 over 88 frames.
+S03_S03.01.04 ثلاثة 
+LOG (gmm-latgen-faster[5.5.249~1-461b5]:DecodeUtteranceLatticeFaster():decoder-wrappers.cc:289) Log-like per frame for utterance S03_S03.01.04 is -7.73602 over 120 frames.
+...
+```
+As you can see, the file name is on the right, and the predicted text is on the left.
+
+### Visualizing Lattice
+If you want to do more analysis, thanks to [Josh Meyer's blog](http://jrmeyer.github.io/asr/2016/12/15/Visualize-lattice-kaldi.html), you can visualize the lattice object that kaldi produced using our test data. You can do that by using `utils/show_lattice.sh` file. You can use it like so:
+```
+$ utils/show_lattice.sh [--mode display|save] [--format pdf|svg] <utt-id> <lattice-ark> <word-list>
+```
+But first, we need to intall `graphviz` library using `sudo apt-get install graphviz`
+
+After installing you can visualize the lattice object of a certain test file. Let's say that we want to visualize the lattice object of `S03_S03.01.01`, then we can go to the root directory of our data which is `kaldi/egs/arabic_corpus_of_isolated_words` and run:
+```
+$ ./utils/show_lattice.sh S03_S03.01.01 ./exp/mono/decode/lat.1.gz ./exp/mono/graph/words.txt
+```
+This command consists of four parts:
+
+- `./utils/show_lattice.sh`: which is the shell script that generates the visualization.
+- `S03_S03.01.01`: which is the utterance id of the test file`S03.01.01.wav`.
+- `./exp/mono.deocde/lat.1.gz`: which is the lattic-ark object.
+- `./exp/mono/graph/words.txt`: which is the filet that contain words and their ids.
+The lattice visualization of this particular file should look like this:
+
+<p align="center">
+<img src="http://www.mediafire.com/convkey/c33b/rqp3f93esks1b3azg.jpg"  height="200" width="400"/> 
+</p>
