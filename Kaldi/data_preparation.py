@@ -1,6 +1,5 @@
 import os
 import re
-import random
 import shutil
 import subprocess
 from glob import glob
@@ -13,24 +12,20 @@ from utils import *
 class DataOrganizer():
 
     def __init__(self):
-        #TODO: You can Modify this member variable
-        #name of the dataset in kaldi
+        #name of the dataset in kaldi (TODO: You can Modify this)
         self.dataset = "arabic_corpus_of_isolated_words"
-        #TODO: You MUST Modify this member variable
+        #absolute path of the data (TODO: You MUST Modify this)
         self.indir = "/media/anwar/D/Data/ASR/Arabic_Corpus_of_Isolated_Words"
-        #TODO: You MUST Modify this member variable
-        self.basedir = "/media/anwar/E/ASR/Kaldi/kaldi/egs"
-        
-        #start/end symbols
-        # self.START = "<s>"
-        # self.END = "</s>"
-        
+        #absolute path of the our processed data in kaldi (TODO: You MUST Change this)
+        self.basedir = "/media/anwar/E/ASR/Kaldi/kaldi/egs" #it must be inside kaldi/egs
+               
         #set constant directories
         self.OUTDIR = os.path.join(self.basedir, self.dataset)
         self.TRAIN_DIR = os.path.join(self.OUTDIR, "data", "train")
         self.TEST_DIR = os.path.join(self.OUTDIR, "data", "test")
         safe_makedir(self.OUTDIR)
         
+        #words of the data
         self.WORDS = ["صفر", "واحد", "إثنان", "ثلاثة", "أربعة", "خمسة",
                       "ستة", "سبعة", "ثمانية", "تسعة", "التنشيط", "التحويل",
                       "الرصيد", "التسديد", "نعم", "لا", "التمويل", "البيانات",
@@ -46,18 +41,19 @@ class DataOrganizer():
 
     def __splitSpeakers(self, ratio=0.8):
         """
-        This private method is used to split the speaker IDs into two sets
-        (train, test) basted on the given ration after filtering some
-        IDs which are defined inside EXCLUDED_IDS.
+        This private method is used to split the speakers into two sets
+        (train, test) basted on the given ratio after filtering some
+        IDs which are defined inside EXCLUDE_WORDS_IDS.
         NOTE: The number of speakers in the "Arabic Corpus of Isolated Words"
-        are 50 whose IDs vary from [1-50].
+        dataset are 50 whose IDs vary from [1-50].
         """
         assert ratio >=0 and ratio <=1,\
             "ratio is a ratio number between [0, 1] inclusively"
+        import random
         random.seed(0)
         #IDs from 1 to 50
         total_ids = set(range(1, 51))
-        #exclude the EXCLUDED_IDS
+        #exclude some speakers found in EXCLUDE_SPEAKERS_IDS
         remaining_ids = list(total_ids - self.EXCLUDE_SPEAKERS_IDS)
         #shuffle
         random.shuffle(remaining_ids)
@@ -71,9 +67,8 @@ class DataOrganizer():
 
     def __getAudioFiles(self):
         """
-        This method is used to get all the audio files that maps to the
-        WORD_IDS after excluding EXCLUDE_SPEAKERS
-
+        This method is used to get all the audio files of the TRAIN_SPEAKERS and 
+        TEST_SPEAKERS that maps to WORDS after excluding EXCLUDE_WORDS_IDS
         NOTE: The number of words in the Arabic Corpus of Isolated Words
         is 20 whose IDs vary from [1-20]
         """
@@ -100,7 +95,8 @@ class DataOrganizer():
         """
         This method is used to prepare the "Arabic Corpus of Isolated Words"
         data for Kaldi. It should locate the preprocessed data inside
-        "kaldi/egs/{DATASET}" where {DATASET} is the name of your dataset
+        "kaldi/egs/DATASET" where DATASET is the name of your dataset that can 
+        be found in the self.dataset member variable
         """
         for filename in tqdm(wav_files, desc="Copying Train dataset"):
             speaker, rep, wordId, ext = filename.split(".")
@@ -114,12 +110,12 @@ class DataOrganizer():
 
     def __create_spk2gender(self, group_dir):
         """
-        This method is used to create spk2gender file that maps the 
+        This method is used to create "spk2gender" file that maps the 
         speakers to their gender following this pattern
         <speaker_id> <gender>
         According to the gender, it's either 'm' for male or
         'f' for female.
-        NOTE: all speakers are male
+        NOTE: all speakers that we are using are male
         """
         with open(os.path.join(group_dir, "spk2gender"), "w") as fout:
             for speaker in sorted(os.listdir(group_dir)):
@@ -130,8 +126,11 @@ class DataOrganizer():
     def __create_wav_scp(self, group_dir):
         """
         This method is used to create "wav.scp" file that maps the
-        utterance id to the audio wav file. utterance id is a name
-        that is unique for each audio file in the data
+        utterance_id to the audio wav file. It should follow this pattern:
+        <utterance_id> <audio abosulte path>
+        utterance_id is a name that is unique for each single audio file in the data.
+        So, I decided it to be following this pattern '<speakerId>_<wavName>'.
+        You can use any other pattern that you find comfortable!
         """
         with open(os.path.join(group_dir, "wav.scp"), "w") as fout:
             for speaker in sorted(os.listdir(group_dir)):
@@ -148,7 +147,7 @@ class DataOrganizer():
     def __create_text(self, group_dir):
         """
         This method is used to create "text" file that maps the
-        utterance id to the text. It follows this pattern
+        utterance_id to the text. It follows this pattern:
         <utterance id> <text>
         """
         with open(os.path.join(group_dir, "text"), "w") as fout:
@@ -164,8 +163,8 @@ class DataOrganizer():
 
     def __create_utt2spk(self, group_dir):
         """
-        This method is used to create utt2spk file that maps the 
-        utterances ids to their speaker following this pattern
+        This method is used to create "utt2spk" file that maps the 
+        utterances ids to their speaker following this pattern:
         <utterance_id> <speaker>
         """
         with open(os.path.join(group_dir, "utt2spk"), "w") as fout:
@@ -179,11 +178,10 @@ class DataOrganizer():
 
     def __create_corpus(self, local_dir):
         """
-        This method is used to create the text file exists
-        in the local directory. This file should contain 
-        all the unique sentences used in the audio files.
-        This file should contain every sentence in a
-        separate line.
+        This method is used to create the text file exists in the local
+        directory. This file should contain all the unique sentences
+        used in the audio files.
+        This file should contain every sentence in a separate line.
         """
         with open(os.path.join(local_dir, "corpus.txt"), "w") as fout:
             for word in self.WORDS:
@@ -192,13 +190,13 @@ class DataOrganizer():
 
     def __create_lexicon(self, local_dir, dict_dir):
         """
-        This method is used to create lexicon file. The lexicon
-        file should maps between the corpus and the phonemes
-        used in our system.
-        NOTE: Here, I use my phenomizer which I can't share 
-        unfortunately. This phenomizer takes a text file as input
-        and creates another text file containing the phenomes of 
-        the input.
+        This method is used to create the lexicon file. The lexicon
+        file should map between the corpus (all text in the data) and
+        the phonemes used in our system.
+        NOTE: Here, I'm using my phenomizer. This phenomizer takes a
+        text file as input and creates another text file containing
+        the phenomes of the input based on my phoneset.
+        Then, I process this file to extract only the text phoneme.
         """
         corpus_path = os.path.join(local_dir, "corpus.txt")
         phenomizer = "/media/anwar/E/PRESENTATION/Phonemizer-1.0.jar"
@@ -222,22 +220,23 @@ class DataOrganizer():
         os.remove(os.path.join(local_dir, "corpus.txt.ph"))
 
 
-    def __create_non_silence_phones(self, dict_dir, phones):
+    def __create_non_silence_phones(self, dict_dir):
         """
-        This method is used to create non_silence phones (also
-        called filler words). These phones are the phones that
-        we use instead of silence :)
-        For example; AAh, ooh, Yaa, eh, ...
+        This method is used to create non_silence phones. In other
+        words, these are the phones that we pronounce that is used
+        by the phonemizer.
         This method should write these non_silence_phones into a text
         file called 'non_silence_phones.txt'
         """
-        assert len(phones)>0, "phones list can NOT be empty"
+        phones = ['$', '@', 'A', 'P', 'R', 'S', 'T', 'a', 'a2',
+                  'b', 'd', 'f', 'h', 'i', 'i2', 'l', 'm', 'n',
+                  'r', 's', 't', 'w', 'x', 'y', '¥', '€']
         with open(os.path.join(dict_dir, "nonsilence_phones.txt"), "w") as fout:
             for ph in phones:
                 fout.write("{}\n".format(ph))
 
 
-    def __create_silence_phones(self, dict_dir, silence_phones=["sil", "spn"]):
+    def __create_silence_phones(self, dict_dir, silence_phones):
         """
         This method is used to create silence phones.
         These phones are the phones that indicated that the speaker is 
@@ -245,6 +244,8 @@ class DataOrganizer():
         This method should write these non_silence_phones into a text
         file called 'non_silence_phones.txt'
         """
+        assert len(silence_phones) > 0,\
+            "You have to provide silence_phones"
         with open(os.path.join(dict_dir, "silence_phones.txt"), "w") as fout:
             for ph in silence_phones:
                 fout.write("{}\n".format(ph))
@@ -252,12 +253,14 @@ class DataOrganizer():
 
     def __create_optional_silence(self, dict_dir, optional_phones):
         """
-        This method is used to create silence phones.
+        This method is used to create optional silence phones.
         These phones are the phones that indicated that the speaker is 
         pausing and not speaking.
         This method should write these non_silence_phones into a text
         file called 'non_silence_phones.txt'
         """
+        assert len(optional_phones) > 0,\
+            "optional_silence.txt can't be empty"
         with open(os.path.join(dict_dir, "optional_silence.txt"), "w") as fout:
             for ph in optional_phones:
                 fout.write("{}\n".format(ph))
@@ -265,8 +268,9 @@ class DataOrganizer():
 
     def __copy_files(self):
         """
-        This method is used to copy certain files from the 'egs' directory at
-        Kaldi. Instead of copying the whole archive, we will create symbolik link
+        This method is used to copy certain files from the 'archive' directory to
+        our processed data directory at kaldi/egs.
+        NOTE:Instead of copying the whole files, we will create symbolik links
         of these files. symbolic link is like a shortcut.
         """
         archive_path = os.path.abspath("archive")
@@ -332,12 +336,9 @@ class DataOrganizer():
         #create lexicon
         self.__create_lexicon(local_dir, dict_dir)
         #create phones used by the phonemizer
-        phones_list = [ '$', '@', 'A', 'P', 'R', 'S', 'T', 'a', 'a2',
-                        'b', 'd', 'f', 'h', 'i', 'i2', 'l', 'm', 'n',
-                        'r', 's', 't', 'w', 'x', 'y', '¥', '€']
-        self.__create_non_silence_phones(dict_dir, phones=phones_list)
+        self.__create_non_silence_phones(dict_dir)
         #create silence phones
-        self.__create_silence_phones(dict_dir, silence_phones=["sil", "spn"]) #HERE (, self.START, self.END)
+        self.__create_silence_phones(dict_dir, silence_phones=["sil", "spn"])
         self.__create_optional_silence(dict_dir, optional_phones=["sil"])
 
         # ----- Copy Data -----
