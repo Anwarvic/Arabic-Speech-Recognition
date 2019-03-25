@@ -1,2 +1,6 @@
 __pycache__
+Kaldi/bin
+Kaldi/include
+Kaldi/lib
+Kaldi/share
 Kaldi/docs/Daniel Povey Course
