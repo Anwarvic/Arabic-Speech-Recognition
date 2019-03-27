@@ -1,6 +1,7 @@
 __pycache__
-Kaldi/bin
-Kaldi/include
-Kaldi/lib
-Kaldi/share
+.vscode
 Kaldi/docs/Daniel Povey Course
+Kaldi/clang
+Kaldi/examples
+Kaldi/pykaldi
+Kaldi/python
