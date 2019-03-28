@@ -1,5 +1,7 @@
 import os
+import shutil
 import subprocess
+from glob import glob
 
 
 def safe_makedir(dirname):
@@ -40,6 +42,15 @@ def safe_create_symlink(src, dst):
     """
     if not os.path.exists(dst):
         os.symlink(src, dst)
+
+
+def copy_regex(src, dst):
+    for filepath in glob(src):
+        _, in_filename = os.path.split(filepath)
+        out_parent, _ = os.path.split(dst)
+        shutil.copy(filepath, os.path.join(out_parent, in_filename))
+
+
 
 def create_path_sh(data_dir):
     """
