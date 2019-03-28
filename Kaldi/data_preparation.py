@@ -286,12 +286,15 @@ class DataOrganizer():
         #copy score.sh
         shutil.copy(src=os.path.join(archive_path, "score.sh"),
                     dst=os.path.join(self.OUTDIR, "data", "local", "score.sh"))
+        #copy prepare.sh
+        shutil.copy(src=os.path.join(archive_path, "prepare.sh"),
+                    dst=os.path.join(self.OUTDIR, "prepare.sh"))
         #copy cmd.sh
         shutil.copy(src=os.path.join(archive_path, "cmd.sh"),
                     dst=os.path.join(self.OUTDIR, "cmd.sh"))
-        #copy run.sh
-        shutil.copy(src=os.path.join(archive_path, "run.sh"),
-                    dst=os.path.join(self.OUTDIR, "run.sh"))
+        #copy run_*.sh
+        copy_regex(src=os.path.join(archive_path, "run_*.sh"),
+                   dst=os.path.join(self.OUTDIR, "run_*.sh"))
         #create path.sh
         create_path_sh(self.OUTDIR)
 
