@@ -1,5 +1,6 @@
 import os
 from glob import glob
+from tqdm import tqdm
 
 from kaldi.asr import GmmLatticeFasterRecognizer
 from kaldi.decoder import LatticeFasterDecoderOptions
@@ -80,23 +81,46 @@ class Recognizer():
             - model_decoded (csv file): It also returns a csv file where a more detailed
               results about the decoding process can be found!!
         """
+        #down-sample wav file
         frame_opts = FrameExtractionOptions()
         frame_opts.samp_freq = 16000
         frame_opts.allow_downsample = True
+        #mfcc features (same as archive/config/mfcc.conf)
         mfcc_opts = MfccOptions()
         mfcc_opts.use_energy = False
         mfcc_opts.frame_opts = frame_opts
-        feat_pipeline = self.__make_feat_pipeline(Mfcc(mfcc_opts))
-
-        # Decode
-        for key, wav in SequentialWaveReader("scp:wav.scp"):
-            feats = feat_pipeline(wav)
-            out = self.ASR.decode(feats)
-            print(key, out["text"], flush=True)
+        #create pipeline
+        pipeline = self.__make_feat_pipeline(Mfcc(mfcc_opts))
+        
+        #words of the data
+        WORDS = ["صفر", "واحد", "إثنان", "ثلاثة", "أربعة", "خمسة",
+                 "ستة", "سبعة", "ثمانية", "تسعة", "التنشيط", "التحويل",
+                 "الرصيد", "التسديد", "نعم", "لا", "التمويل", "البيانات",
+                 "الحساب", "إنهاء"]
+        #start decoding
+        correct = 0.
+        with open("wav.scp", "r") as fin:
+            num_wavs = len(fin.readlines())
+        
+        with open("{}_decoding.csv".format(self.MODEL_NAME), 'w') as fout:
+            #write csv header
+            fout.write("{},{},{},{}\n".format("Filename", "TrueWord", "Predicted", "Likelihood"))
+            #iterate over wav files
+            for key, wav in tqdm(SequentialWaveReader("scp:wav.scp"), total=num_wavs, desc="Decoding"):
+                true_word_id = int(key.split(".")[-1])-1
+                true_word = WORDS[true_word_id]
+                feats = pipeline(wav)
+                out = self.ASR.decode(feats)
+                fout.write("{},{},{},{}\n".format(key, true_word, out["text"], out["likelihood"]))
+                # print(key, out["text"], flush=True)
+                #was it correct??
+                if true_word == out["text"]:
+                    correct+=1.
+        return correct/num_wavs
 
 
 if __name__ == "__main__":
     model_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words/exp"
     model_name = "tri1"
     rec = Recognizer(model_dir, model_name)
-    rec.decode()
+    print("Accuracy: {}%".format(rec.decode()*100))
