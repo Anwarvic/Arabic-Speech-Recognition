@@ -262,7 +262,9 @@ Now, we have prepared our data for training. To train a model of your choice, we
 ```
 After running this script, you should get two exra folders in the root directory. These two extra folders are `exp` and `mfcc`.
 
-Kaldi provides many models that we can train. Here is some:
+Kaldi provides many models that we can train. I will enumerate these models starting from the simplest model to the most sophisticated one. <u>The very interesting of these models is that every model depends on the former ones. In other words, to use the second model you have to used the first model first as the second model uses some files from the first model</u>.
+
+Here they are:
 
 ### 1. GMM/HMM Monophone
 
@@ -303,7 +305,7 @@ After running this script, you should get two other folders (`tri3a`, and `tri3a
 
 **NOTE**
 
-Starting from this mode, we are giong to use fMLLR aligning method. fMLLR stands for Feature-Space Maximum Likelihood Linear Regression. After SAT training, the acoustic model is no longer trained on the original features, but on speaker-normalized features. For alignment, we essentially have to remove the speaker identity from the features by estimating the speaker identity (with the inverse of the fMLLR matrix), then removing it from the model (by multiplying the inverse matrix with the feature vector). These quasi-speaker-independent acoustic models can then be used in the alignment process.
+Starting from this model, we are giong to use fMLLR aligning method. fMLLR stands for Feature-Space Maximum Likelihood Linear Regression. After SAT training, the acoustic model is no longer trained on the original features, but on speaker-normalized features. For alignment, we essentially have to remove the speaker identity from the features by estimating the speaker identity (with the inverse of the fMLLR matrix), then removing it from the model (by multiplying the inverse matrix with the feature vector). These quasi-speaker-independent acoustic models can then be used in the alignment process.
 
 ### 4. GMM/HMM Triphone with SAT
 
@@ -316,11 +318,7 @@ To use this model, you have to run `run_hmm_tri_lda_mllt.sh` first. Then, you ca
 After running this script, you should get two other folders (`tri4a`, and `tri4a_align`) inside the `exp` directory.
 
 
-
-
-
-
-
+**VERY IMPORTANT**
 
 If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. [Here is](http://www.mediafire.com/file/m43428auuz1i2k8/run_log.txt/file) my terminal output that you should get something similar to it, you can download it for reference.
 
@@ -377,3 +375,9 @@ The output of this command should be a pdf file named `S03_03.01.01.pdf` at the 
 You can open the `utils/show_lattice.sh` file and change the `lm_scale` and `acoustic_scale` parameters. Here, I used the zero values.
 
 TO BE CONTINUEUED :)
+
+## Acknowledgements
+
+- Thanks for Joshua Meyer and his great articles [here](http://jrmeyer.github.io/asr/2016/12/15/DNN-AM-Kaldi.html), [here](http://jrmeyer.github.io/asr/2016/12/15/Visualize-lattice-kaldi.html) and [here](http://jrmeyer.github.io/asr/2016/09/12/Using-built-GMM-model-Kaldi.html).
+- Thanks for Eleanor Chodroff for his great post [here](https://eleanorchodroff.com/tutorial/kaldi/training-acoustic-models.html). It helped me alot.
+- Big thanks for Daniel Povey for creating Kaldi.
