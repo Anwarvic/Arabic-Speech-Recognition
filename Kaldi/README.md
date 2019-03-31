@@ -9,7 +9,7 @@ Kaldi has been incorporated as part of the CHiME Speech Separation and Recogniti
 
 ## Download
 
-Before taking about installing Kaldi and the per-requisites, let’s first see how we can download it. We can do that by cloning the official repo using:
+Before taking about installing Kaldi and the prerequisites, let’s first see how we can download it. We can do that by cloning the official repo using:
 ```
 git clone  https://github.com/kaldi-asr/kaldi.git
 ```
@@ -88,18 +88,18 @@ After running this script, a new directory with the name of `dataset` variable w
     │	 │    ├── corpus.txt
     │	 │    └── score.sh
     │   ├── test
-    │       ├── S03
-    │       ├── S18
-    │       ├── S12
+    │       ├── S03 -> S03.*.*.wav
+    │       ├── S18 -> S18.*.*.wav
+    │       ├── S21 -> S21.*.*.wav
     │       ├── ...
     │       ├── spk2gender
     │       ├── text
     │       ├── utt2spk
     │       └── wav.scp 
-    │   └── train4
-    │       ├── S01
-    │       ├── S02
-    │       ├── S04
+    │   └── train
+    │       ├── S01 -> S01.*.*.wav
+    │       ├── S02 -> S02.*.*.wav
+    │       ├── S04 -> S04.*.*.wav
     │       ├── ...
     │       ├── spk2gender
     │       ├── text
@@ -109,11 +109,15 @@ After running this script, a new directory with the name of `dataset` variable w
     ├── utils -> ../../wsj/s5/utils
     ├── cmd.sh
     ├── path.sh
-    ├── run.sh
-    └── score.sh
+    ├── prepare.sh
+    ├── run_hmm_mono.sh
+    ├── run_hmm_tri.sh
+    ├── run_tri_lda_mllt.sh
+    ├── run_nnet.sh
+    └── run_nnet3.sh
 
 ```
-You should be apple to run this script like so:
+You should be able to run this script like so:
 ```
 $ python data_preparation
 Copying Train dataset: 100%|███████████████████████████████████████████████████████| 7400/7400 [00:08<00:00, 892.87it/s]
@@ -249,12 +253,78 @@ Output: _ t s @ h _
 [Mar 20 15:09:33] INFO [main] [com.univox.PhonemizerMain:90] - *****************************************************************************
 ```
 **Very Imporant**:
-Starting from the thrid line in the previous output; you won't get these lines as these are related to the phenomizer that I used. A phenomizer is a software that converts text word to a sequence of phoemes like `صفر` to `S F R`. I can't share the one that I used with you as it doesn't belong to me. You need to create yours.
+Starting from the thrid line of the previous output; you won't get these lines as these are related to the phenomizer that I used. A phenomizer is a software that converts text to a sequence of phoemes like `صفر` to `S F R`. I can't share the one that I have used with you as it doesn't belong to me. You need to create yours.
 
 ## Train Model
-Now, we have prepared our data for training. You can do that simply by running `run.sh` shell script in the root directory of the data. Mine is `/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words` which is the same as `indir` member variable.
+Now, we have prepared our data for training. To train a model of your choice, we have at first to prepare the acoustic data, extract featuers, and create a language model. All of this can be done by running `prepare.sh` script in the root directory of the data. Mine is `/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words` which is the same as `indir` member variable.
+```
+/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words$ ./prepare.sh
+```
+After running this script, you should get two exra folders in the root directory. These two extra folders are `exp` and `mfcc`.
+
+Kaldi provides many models that we can train. Here is some:
+
+### 1. GMM/HMM Monophone
+
+A monophone model is an acoustic model that does not include any contextual information about the preceding or following phone. It is used as a building block for the triphone models, which do make use of contextual information.
+
+
+The parameters of the acoustic model are estimated in acoustic training steps; however, the process can be better optimized by cycling through training and alignment phases. This is also known as **Viterbi training**. By aligning the audio to the reference transcript with the most current acoustic model, additional training algorithms can then use this output to improve or refine the parameters of the model. Therefore, each training step will be followed by an alignment step where the audio and text can be realigned.
+
+To run this model, you can use `run_hmm_mono.sh`:
+```
+/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words$ ./run_hmm_mono.sh
+```
+After running this script, you should get two folders (`mono`, `mono_ali`) inside the `exp` directory.
+
+### 2. GMM/HMM Triphone
+
+While monophone models simply represent the acoustic parameters of a single phoneme, we know that phonemes will vary considerably depending on their particular context. The triphone models represent a phoneme variant in the context of two other (left and right) phonemes.
+
+At this point, we’ll also need to deal with the fact that not all triphone units are present (or will ever be present) in the dataset. There are (# of phonemes)3 possible triphone models, but only a subset of those will actually occur in the data. Furthermore, the unit must also occur multiple times in the data to gather sufficient statistics for the data. A phonetic decision tree groups these triphones into a smaller amount of acoustically distinct units, thereby reducing the number of parameters and making the problem computationally feasible.
+
+To run this model, you have to run `run_hm_mono.sh` script first and then use `run_hmm_tri.sh`:
+```
+/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words$ ./run_hmm_tri.sh
+```
+After running this script, you should get four other folders (`tri1`, `tri1_ali`, `tri2`, and `tri2_align`) inside the `exp` directory. In this script, we have trained two triphone models. The first is Delta triphone model and the second is delta-delta triphone model which computes delta and double-delta features, or dynamic coefficients, to supplement the MFCC features.
+
+Delta and delta-delta features are numerical estimates of the first and second order derivatives of the signal (features). As such, the computation is usually performed on a larger window of feature vectors. While a window of two feature vectors would probably work, it would be a very crude approximation (similar to how a delta-difference is a very crude approximation of the derivative). Delta features are computed on the window of the original features; the delta-delta are then computed on the window of the delta-features.
+
+### 3. GMM/HMM Triphone with LDA-MLLT
+
+LDA-MLLT stands for "Linear Discriminant Analysis" – Maximum Likelihood Linear Transform. The Linear Discriminant Analysis takes the feature vectors and builds HMM states, but with a reduced feature space for all data. The Maximum Likelihood Linear Transform takes the reduced feature space from the LDA and derives a unique transformation for each speaker. MLLT is therefore a step towards speaker normalization, as it minimizes differences among speakers.
+
+To use this model, you have to run `run_hmm_tri.sh` first. Then, you can train this model using `./run_hmm_tri_lda_mllt.sh` like so:
+```
+/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words$ ./run_hmm_tri_lda_mllt.sh
+```
+After running this script, you should get two other folders (`tri3a`, and `tri3a_align`) inside the `exp` directory.
+
+**NOTE**
+
+Starting from this mode, we are giong to use fMLLR aligning method. fMLLR stands for Feature-Space Maximum Likelihood Linear Regression. After SAT training, the acoustic model is no longer trained on the original features, but on speaker-normalized features. For alignment, we essentially have to remove the speaker identity from the features by estimating the speaker identity (with the inverse of the fMLLR matrix), then removing it from the model (by multiplying the inverse matrix with the feature vector). These quasi-speaker-independent acoustic models can then be used in the alignment process.
+
+### 4. GMM/HMM Triphone with SAT
+
+SAT stands for Speaker Adaptive Training. SAT also performs speaker and noise normalization by adapting to each specific speaker with a particular data transform. This results in more homogenous or standardized data, allowing the model to use its parameters on estimating variance due to the phoneme, as opposed to the speaker or recording environment.
+
+To use this model, you have to run `run_hmm_tri_lda_mllt.sh` first. Then, you can train this model using `./run_hmm_tri_sat.sh` like so:
+```
+/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words$ ./run_hmm_sat.sh
+```
+After running this script, you should get two other folders (`tri4a`, and `tri4a_align`) inside the `exp` directory.
+
+
+
+
+
+
+
 
 If you have made any mistakes in this tutorial, logs from the terminal should guide you how to deal with it. [Here is](http://www.mediafire.com/file/m43428auuz1i2k8/run_log.txt/file) my terminal output that you should get something similar to it, you can download it for reference.
+
+
 
 
 ## Getting Results
