@@ -45,6 +45,12 @@ def safe_create_symlink(src, dst):
 
 
 def copy_regex(src, dst):
+    """
+    This function is used to copy file(s) that match an input source regex
+    to dst directory. For example:
+    >>> copy_regex("/usr/anwar/run_*.sh", "/home/desktop/run_*.sh")
+    This will copy all shell files that start with "run_"
+    """
     for filepath in glob(src):
         _, in_filename = os.path.split(filepath)
         out_parent, _ = os.path.split(dst)
