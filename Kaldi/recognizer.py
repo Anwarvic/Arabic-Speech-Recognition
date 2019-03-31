@@ -20,6 +20,10 @@ class Recognizer():
                Kaldi uses these names by convention:
                 * mono         * tri1         * tri2
                 * tri3a        * tri4a
+        This method sets these member variables:
+            - MODEL_DIR: same as model_dir
+            - MODEL_NAME: same as model_name
+            - ASR: The actual speech recognition object
         """
         self.MODEL_DIR = model_dir
         self.MODEL_NAME = model_name
@@ -44,7 +48,8 @@ class Recognizer():
         NOTE: Any non-wav file existing in data_dir will be neglected!!
         """
         pass
-    
+
+
     # Define feature pipeline in code
     def __make_feat_pipeline(self, base, opts=DeltaFeaturesOptions()):
         """
@@ -62,6 +67,7 @@ class Recognizer():
             cmvn.apply(feats)
             return compute_deltas(opts, feats)
         return feat_pipeline
+
 
     def decode(self, wav_trans="wav.scp"):
         """
