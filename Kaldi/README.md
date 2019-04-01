@@ -374,7 +374,45 @@ The output of this command should be a pdf file named `S03_03.01.01.pdf` at the 
 
 You can open the `utils/show_lattice.sh` file and change the `lm_scale` and `acoustic_scale` parameters. Here, I used the zero values.
 
-TO BE CONTINUEUED :)
+
+## Using Model (pyKaldi)
+Now, we have trained our model using our own data. And as we can see, we have got a magnificent results. Now, let's see how to use our trained model to recognizer actual wav files. To do so, we have to follow these steps:
+
+- Intall pyKaldi from source using this [link](https://github.com/pykaldi/pykaldi#from-source). Just note that I don't recommend using Virtual Environment. I've struggled a lot when I used one!!
+- Use the provided python script `recognizer.py` to decode a given wav or a directory of wavs.
+
+Let's see how we are going to do that, you can recored some wav files with sample rate > 16000 and test it out. I have done that for you, you can use these recoreds to test it out.  It can be downloaded from [here](http://www.mediafire.com/file/3ixb917387zfr7q/Ammar.tar.xz/file).
+Then, you can use the `recognizer.py` script by opening the file and change these values like so:
+```
+>>> #create model
+>>> model_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words/exp"
+>>> model_name = "tri1"
+>>> rec = Recognizer(model_dir, model_name)
+>>>
+>>> #decode
+>>> path = "/media/anwar/D/Data/ASR/IST-Dataset/Ammar/S03.01.01.wav"
+>>> score = rec.decode(path, remove_scp=True)
+Decoding: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  8.23it/s]
+TrueWord: صفر
+PredictedWord: صفر
+Likelihood: -1726.9397706985474
+>>> print("Accuracy: {}%".format(score*100))
+Accuracy: 100.0%
+```
+Here, we have tested just one wav, let's test the whole directory:
+```
+>>> #decode
+>>> path = "/media/anwar/D/Data/ASR/IST-Dataset/Ammar"
+>>> score = rec.decode(path, remove_scp=True)
+Decoding: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 200/200 [00:14<00:00, 13.70it/s]
+>>> print("Accuracy: {}%".format(score*100))
+Accuracy: 94.5%
+```
+You can also see a file created named `{model_name}_decoding.csv` in this case `tri1_decoding.csv` where you can find the output of the model of every single wav in the directory:
+
+<p align="center">
+<img src="http://www.mediafire.com/convkey/feb9/r9o0g5g8vss85v9zg.jpg" /> 
+</p>
 
 ## Acknowledgements
 
