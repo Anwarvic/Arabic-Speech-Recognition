@@ -39,16 +39,31 @@ class Recognizer():
             decoder_opts=decoder_opts)
 
     
-    def create_transcription(self, data_dir):
+    def create_transcription(self, data_path):
         """
         This method is used to create a text transcription file that contain 
         the files name that need to be decoded
         Parameters:
-            - data_dir (string): full path of the data directory.
+            - data_path (string): full path of the data directory containing wav files
+              to be decoded, or just a wav-file.
+        Usage:
+        >>> create_transcription("/home/desktop/recoreded_data)
+        or
+        >>> create_transcription("home/desktop/recorded_data/01.wav")
         
-        NOTE: Any non-wav file existing in data_dir will be neglected!!
+        NOTE: Any non-wav file existing in data_path will be neglected!!
         """
-        pass
+        #check wether data_path is a directory or just one file
+        if os.path.isdir(data_path):
+           wav_files = sorted(glob(os.path.join(data_path, "*", "*.wav"), recursive=True))
+        else:
+            wav_files = [data_path]
+        with open("wav.scp", "w") as fout:
+            for wav_path in wav_files:
+                _, wav_filename = os.path.split(wav_path)
+                wav_filename = wav_filename[:-4] #remove extension
+                fout.write("{} {}\n".format(wav_filename, wav_path))
+                
 
 
     # Define feature pipeline in code
@@ -78,6 +93,9 @@ class Recognizer():
               need(s) to be decoded.
         Returns:
             - accuracy (int): The accuracy of the the model over these wav files.
+            (In case of wav.scp contains just one file)
+            - Returns the true word & predicted word
+            (In case of wav.scp contains more than one file)
             - model_decoded (csv file): It also returns a csv file where a more detailed
               results about the decoding process can be found!!
         """
@@ -111,16 +129,24 @@ class Recognizer():
                 true_word = WORDS[true_word_id]
                 feats = pipeline(wav)
                 out = self.ASR.decode(feats)
-                fout.write("{},{},{},{}\n".format(key, true_word, out["text"], out["likelihood"]))
-                # print(key, out["text"], flush=True)
+                if num_wavs > 1:
+                    fout.write("{},{},{},{}\n".format(key, true_word, out["text"], out["likelihood"]))
                 #was it correct??
                 if true_word == out["text"]:
                     correct+=1.
+            if num_wavs == 1:
+                print("TrueWord:", true_word)
+                print("PredictedWord:", out["text"])
+                print("Likelihood:", out["likelihood"])
         return correct/num_wavs
+
 
 
 if __name__ == "__main__":
     model_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words/exp"
     model_name = "tri1"
     rec = Recognizer(model_dir, model_name)
+    #create transcription
+    rec.create_transcription("/media/anwar/D/Data/ASR/IST-Dataset/")
+    #decode
     print("Accuracy: {}%".format(rec.decode()*100))
