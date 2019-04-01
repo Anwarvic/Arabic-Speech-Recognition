@@ -20,7 +20,6 @@ class Recognizer():
             - model_name (string): the name of the model.
                Kaldi uses these names by convention:
                 * mono         * tri1         * tri2
-                * tri3a        * tri4a
         This method sets these member variables:
             - MODEL_DIR: same as model_dir
             - MODEL_NAME: same as model_name
@@ -28,10 +27,12 @@ class Recognizer():
         """
         self.MODEL_DIR = model_dir
         self.MODEL_NAME = model_name
-        # Construct recognizer
+        #set decoding options (same as archive/config/decode.conf)
         decoder_opts = LatticeFasterDecoderOptions()
-        decoder_opts.beam = 11.0
-        decoder_opts.max_active = 7000
+        decoder_opts.beam = 13.0
+        decoder_opts.lattice_beam = 6.0
+        # decoder_opts.max_active = 7000
+        # Construct recognizer
         self.ASR = GmmLatticeFasterRecognizer.from_files(
             os.path.join(self.MODEL_DIR, self.MODEL_NAME, "final.mdl"),
             os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "HCLG.fst"),
@@ -67,7 +68,6 @@ class Recognizer():
                 wav_filename = wav_filename[:-4] #remove extension
                 fout.write("{} {}\n".format(wav_filename, wav_path))
                 
-
 
     # Define feature pipeline in code
     def __make_feat_pipeline(self, base, opts=DeltaFeaturesOptions()):
@@ -158,6 +158,6 @@ if __name__ == "__main__":
     rec = Recognizer(model_dir, model_name)
     
     #decode
-    path = "/media/anwar/D/Data/ASR/IST-Dataset/Ammar"
+    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono/Anwar"
     score = rec.decode(path, remove_scp=True)
     print("Accuracy: {}%".format(score*100))
