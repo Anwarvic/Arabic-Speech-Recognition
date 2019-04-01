@@ -13,12 +13,12 @@ class DataOrganizer():
 
     def __init__(self):
         #name of the dataset in kaldi (TODO: You can Modify this)
-        self.dataset = "arabic_corpus_of_isolated_words"
+        self.dataset = "ist"
         #absolute path of the data (TODO: You MUST Modify this)
         self.indir = "/media/anwar/D/Data/ASR/Arabic_Corpus_of_Isolated_Words"
         #absolute path of the our processed data in kaldi (TODO: You MUST Change this)
         self.basedir = "/media/anwar/E/ASR/Kaldi/kaldi/egs" #it must be inside kaldi/egs
-               
+        
         #set constant directories
         self.OUTDIR = os.path.join(self.basedir, self.dataset)
         self.TRAIN_DIR = os.path.join(self.OUTDIR, "data", "train")
@@ -327,7 +327,7 @@ class DataOrganizer():
         self.__create_utt2spk(self.TRAIN_DIR)
         self.__create_utt2spk(self.TEST_DIR)
 
-        # ----- Prepare Local corpus -----
+        # ----- Prepare Local corpuss -----
         local_dir = os.path.join(self.OUTDIR, "data", "local")
         safe_makedir(local_dir)
         #create corpus
