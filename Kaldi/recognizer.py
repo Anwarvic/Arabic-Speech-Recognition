@@ -39,23 +39,26 @@ class Recognizer():
             decoder_opts=decoder_opts)
 
     
-    def create_transcription(self, data_path):
+    def __create_transcription(self, data_path):
         """
-        This method is used to create a text transcription file that contain 
-        the files name that need to be decoded
+        This private method is used to create a text transcription file
+        that contain the files name that need to be decoded
         Parameters:
-            - data_path (string): full path of the data directory containing wav files
-              to be decoded, or just a wav-file.
+            - data_path (string): full path of the data directory containing
+              wav files to be decoded, or just a wav-file.
         Usage:
         >>> create_transcription("/home/desktop/recoreded_data)
         or
         >>> create_transcription("home/desktop/recorded_data/01.wav")
-        
-        NOTE: Any non-wav file existing in data_path will be neglected!!
+        NOTE:
+        Any non-wav file existing in data_path will be neglected!!
         """
+        assert os.path.exists(data_path), "provided a valid path"
         #check wether data_path is a directory or just one file
         if os.path.isdir(data_path):
-           wav_files = sorted(glob(os.path.join(data_path, "*", "*.wav"), recursive=True))
+           wav_files = sorted(glob(os.path.join(data_path, "*.wav")))
+           if len(wav_files) == 0:
+               wav_files = sorted(glob(os.path.join(data_path, "*", "*.wav"), recursive=True))
         else:
             wav_files = [data_path]
         with open("wav.scp", "w") as fout:
@@ -85,12 +88,14 @@ class Recognizer():
         return feat_pipeline
 
 
-    def decode(self, wav_trans="wav.scp"):
+    def decode(self, data_path, remove_scp=True):
         """
         This method is used to decode a wav file/directory.
         Parameters:
-            - wav_trans (string): the filename of the trainscription of the wav(s) that
-              need(s) to be decoded.
+            - data_path (string): full path of the data directory containing
+              wav files to be decoded, or just a wav-file.
+            - remove_scp (bool): remove transcription file wav.scp that is created
+              for decoding.
         Returns:
             - accuracy (int): The accuracy of the the model over these wav files.
             (In case of wav.scp contains just one file)
@@ -99,6 +104,8 @@ class Recognizer():
             - model_decoded (csv file): It also returns a csv file where a more detailed
               results about the decoding process can be found!!
         """
+        #create transcription file
+        self.__create_transcription(data_path)
         #down-sample wav file
         frame_opts = FrameExtractionOptions()
         frame_opts.samp_freq = 16000
@@ -138,15 +145,19 @@ class Recognizer():
                 print("TrueWord:", true_word)
                 print("PredictedWord:", out["text"])
                 print("Likelihood:", out["likelihood"])
+        #remove wav.scp
+        os.remove("wav.scp")
         return correct/num_wavs
 
 
 
 if __name__ == "__main__":
+    #create model
     model_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words/exp"
     model_name = "tri1"
     rec = Recognizer(model_dir, model_name)
-    #create transcription
-    rec.create_transcription("/media/anwar/D/Data/ASR/IST-Dataset/")
+    
     #decode
-    print("Accuracy: {}%".format(rec.decode()*100))
+    path = "/media/anwar/D/Data/ASR/IST-Dataset/Ammar"
+    score = rec.decode(path, remove_scp=True)
+    print("Accuracy: {}%".format(score*100))
