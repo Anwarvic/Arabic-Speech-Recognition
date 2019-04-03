@@ -13,7 +13,7 @@ class DataOrganizer():
 
     def __init__(self):
         #name of the dataset in kaldi (TODO: You can Modify this)
-        self.dataset = "ist"
+        self.dataset = "arabic_corpus_of_isolated_words"
         #absolute path of the data (TODO: You MUST Modify this)
         self.indir = "/media/anwar/D/Data/ASR/Arabic_Corpus_of_Isolated_Words"
         #absolute path of the our processed data in kaldi (TODO: You MUST Change this)
@@ -81,12 +81,12 @@ class DataOrganizer():
         for sp in self.TRAIN_SPEAKERS:
             for word_id in remaining_word_ids:
                 file_regex = sp+".*."+str(word_id).zfill(2)+".wav" #get files from 
-                train_wavFiles.extend(glob(os.path.join(self.indir, sp, file_regex)))
+                train_wavFiles.extend(glob(os.path.join(self.indir, file_regex)))
         train_wavFiles = [os.path.split(wav)[-1] for wav in train_wavFiles]
         for sp in self.TEST_SPEAKERS:
             for word_id in remaining_word_ids:
                 file_regex = sp+".*."+str(word_id).zfill(2)+".wav" #get files from 
-                test_wavFiles.extend(glob(os.path.join(self.indir, sp, file_regex)))
+                test_wavFiles.extend(glob(os.path.join(self.indir, file_regex)))
         test_wavFiles = [os.path.split(wav)[-1] for wav in test_wavFiles]
         return train_wavFiles, test_wavFiles
 
