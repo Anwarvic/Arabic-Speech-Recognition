@@ -27,17 +27,25 @@ class Recognizer():
         """
         self.MODEL_DIR = model_dir
         self.MODEL_NAME = model_name
-        #set decoding options (same as archive/config/decode.conf)
-        decoder_opts = LatticeFasterDecoderOptions()
-        decoder_opts.beam = 13.0
-        decoder_opts.lattice_beam = 6.0
-        # decoder_opts.max_active = 7000
-        # Construct recognizer
-        self.ASR = GmmLatticeFasterRecognizer.from_files(
-            os.path.join(self.MODEL_DIR, self.MODEL_NAME, "final.mdl"),
-            os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "HCLG.fst"),
-            os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "words.txt"),
-            decoder_opts=decoder_opts)
+        self.ASR = self.__initialize_decoder()
+
+        
+    def __initialize_decoder(self):
+        if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
+            #set decoding options (same as archive/config/decode.conf)
+            decoder_opts = LatticeFasterDecoderOptions()
+            decoder_opts.beam = 13.0
+            decoder_opts.lattice_beam = 6.0
+            # decoder_opts.max_active = 7000
+            # Construct recognizer
+            asr = GmmLatticeFasterRecognizer.from_files(
+                    os.path.join(self.MODEL_DIR, self.MODEL_NAME, "final.mdl"),
+                    os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "HCLG.fst"),
+                    os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "words.txt"),
+                    decoder_opts=decoder_opts)
+        else:
+            pass
+        return asr
 
     
     def __create_transcription(self, data_path):
@@ -123,13 +131,13 @@ class Recognizer():
                  "الرصيد", "التسديد", "نعم", "لا", "التمويل", "البيانات",
                  "الحساب", "إنهاء"]
         #start decoding
-        correct = 0.
         with open("wav.scp", "r") as fin:
             num_wavs = len(fin.readlines())
         
         with open("{}_decoding.csv".format(self.MODEL_NAME), 'w') as fout:
             #write csv header
             fout.write("{},{},{},{}\n".format("Filename", "TrueWord", "Predicted", "Likelihood"))
+            correct = 0.
             #iterate over wav files
             for key, wav in tqdm(SequentialWaveReader("scp:wav.scp"), total=num_wavs, desc="Decoding"):
                 true_word_id = int(key.split(".")[-1])-1
@@ -158,6 +166,6 @@ if __name__ == "__main__":
     rec = Recognizer(model_dir, model_name)
     
     #decode
-    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono/Anwar"
+    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono/Ammar/S03.10.01.wav"
     score = rec.decode(path, remove_scp=True)
     print("Accuracy: {}%".format(score*100))
