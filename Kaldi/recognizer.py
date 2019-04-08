@@ -84,43 +84,49 @@ class Recognizer():
     # Define feature pipeline in code
     def __make_feat_pipeline(self):
         """
-        This private method is used to create a feature pipeline.
+        This private method is used to create a feature pipeline based on the model.
+        The pipeline is divided into two parts:
+        -> pre-processing:
+            - Computing MFCC features using compute-mfcc-feats binary file
+              over mfcc.conf file and wav transcription file
+            - Normalize the extracted features using apply-cmvn-sliding binary file
+        -> processing:
+            this part differs between a model to the other
         Returns:
-            - a tuple of string function that represents pipeline
-              of the feature extraction
-        NOTE: The feat read specifier differs between a model to the other
+            - a string that represents unix-like pipeline of the feature extraction process
+        
+        RESOURCES:
+        http://kaldi-asr.org/doc/io.html#io_sec_specifiers_both
         """
         # define the rspecifier for reading the features
         if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
             feats_rspecifier = (
-                "ark,c,css:"
+                "ark,s,cs:"
                 #does the same functionality as archive/steps/make_mfcc.sh
-                "{0}/src/featbin/compute-mfcc-feats --config=archive/conf/mfcc.conf scp:wav.scp ark:-"
+                "{0}/src/featbin/compute-mfcc-feats --allow-downsample --config=archive/conf/mfcc.conf scp:wav.scp ark:-"
                 #does the same functionality as archive/steps/compute_cmvn_stats.sh
                 #NOTE: we have set the cmn-window so big to normalize over the whole audio file
                 " | {0}/src/featbin/apply-cmvn-sliding --cmn-window=1000000000 --center=true ark:- ark:-"
-                #does the same functionality found at archive/steps/train_mono.sh and archive/steps/train_delta.sh
+                #does the same functionality found at archive/steps/train_mono.sh and archive/steps/train_deltas.sh
                 " | {0}/src/featbin/add-deltas ark:- ark:-"
                 " |".format(self.KALDI_DIR)
             )
         elif self.MODEL_NAME in ["tri3a", "tri4a"]:
             feats_rspecifier = (
-                #REF
-                #"ark,s,cs:"
-                # "apply-cmvn --utt2spk=ark:data/test/utt2spk scp:data/test/cmvn.scp scp:data/test/feats.scp ark:-"
-                # " | splice-feats ark:- ark:-"
-                # " | transform-feats model/final.mat ark:- ark:- "
-                # " |"
-
-                "ark,s,cs:"
-                "{0}/src/featbin/compute-mfcc-feats --config=archive/conf/mfcc.conf scp:wav.scp ark:-"
+                 "ark,s,cs:"
+                 #does the same functionality as archive/steps/make_mfcc.sh
+                "{0}/src/featbin/compute-mfcc-feats --allow-downsample --config=archive/conf/mfcc.conf scp:wav.scp ark:-"
+                #does the same functionality as archive/steps/compute_cmvn_stats.sh
+                #NOTE: we have set the cmn-window so big to normalize over the whole audio file
                 " | {0}/src/featbin/apply-cmvn-sliding --cmn-window=1000000000 --center=true ark:- ark:-"
+                #the next two commands do the same functionality found at archive/steps/train_lda_mllt.sh 
+                #and archive/steps/train_sat.sh
                 " | {0}/src/featbin/splice-feats ark:- ark:-"
-                " | {0}/src/featbin/transform-feats {2}/final.mat ark:- ark:-"
-                " |".format(self.KALDI_DIR, self.BASE_DIR, self.MODEL_DIR)
+                " | {0}/src/featbin/transform-feats {1}/final.mat ark:- ark:-"
+                " |".format(self.KALDI_DIR, self.MODEL_DIR)
             )
-            print(feats_rspecifier)
-
+        
+        # print(feats_rspecifier)
         return feats_rspecifier
 
 
@@ -142,14 +148,6 @@ class Recognizer():
         """
         #create transcription file
         self.__create_transcription(data_path)
-        #down-sample wav file
-        frame_opts = FrameExtractionOptions()
-        frame_opts.samp_freq = 16000
-        frame_opts.allow_downsample = True
-        #mfcc features (same as archive/config/mfcc.conf)
-        mfcc_opts = MfccOptions()
-        mfcc_opts.use_energy = False
-        mfcc_opts.frame_opts = frame_opts
         #create pipeline
         pipeline = self.__make_feat_pipeline()
         #words of the data
