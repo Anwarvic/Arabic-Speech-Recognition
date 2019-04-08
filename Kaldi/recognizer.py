@@ -12,7 +12,7 @@ from kaldi.util.table import SequentialMatrixReader, SequentialWaveReader
 
 class Recognizer():
 
-    def __init__(self, model_dir, model_name):
+    def __init__(self, base_dir, model_name, kaldi_dir):
         """
         This method is used define the class member variables.
         Parameters:
@@ -25,26 +25,30 @@ class Recognizer():
             - MODEL_NAME: same as model_name
             - ASR: The actual speech recognition object
         """
-        self.MODEL_DIR = model_dir
-        self.MODEL_NAME = model_name
+        self.BASE_DIR = base_dir
+        self.MODEL_NAME = model_name.lower()
+        #TODO: assert here
+        self.MODEL_DIR = os.path.join(self.BASE_DIR, "exp", self.MODEL_NAME)
+        self.KALDI_DIR = kaldi_dir
         self.ASR = self.__initialize_decoder()
 
         
     def __initialize_decoder(self):
-        if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
-            #set decoding options (same as archive/config/decode.conf)
-            decoder_opts = LatticeFasterDecoderOptions()
-            decoder_opts.beam = 13.0
-            decoder_opts.lattice_beam = 6.0
-            # decoder_opts.max_active = 7000
-            # Construct recognizer
-            asr = GmmLatticeFasterRecognizer.from_files(
-                    os.path.join(self.MODEL_DIR, self.MODEL_NAME, "final.mdl"),
-                    os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "HCLG.fst"),
-                    os.path.join(self.MODEL_DIR, self.MODEL_NAME, "graph", "words.txt"),
-                    decoder_opts=decoder_opts)
-        else:
-            pass
+        # if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
+        #set decoding options (same as archive/config/decode.conf)
+        decoder_opts = LatticeFasterDecoderOptions()
+        decoder_opts.beam = 13.0
+        decoder_opts.lattice_beam = 6.0
+        # decoder_opts.max_active = 7000
+        
+        # Construct recognizer
+        asr = GmmLatticeFasterRecognizer.from_files(
+                os.path.join(self.MODEL_DIR, "final.mdl"),
+                os.path.join(self.MODEL_DIR, "graph", "HCLG.fst"),
+                os.path.join(self.MODEL_DIR, "graph", "words.txt"),
+                decoder_opts=decoder_opts)
+        # else:
+        #     pass
         return asr
 
     
@@ -78,25 +82,49 @@ class Recognizer():
                 
 
     # Define feature pipeline in code
-    def __make_feat_pipeline(self, base, opts=DeltaFeaturesOptions()):
+    def __make_feat_pipeline(self):
         """
         This private method is used to create a feature pipeline.
-        Parameters:
-            - base (kaldi.feat.mfcc object): #TODO
-            - opts: #TODO
         Returns:
-            - It returns a function that represents pipeline of a wav
+            - a tuple of string function that represents pipeline
+              of the feature extraction
+        NOTE: The feat read specifier differs between a model to the other
         """
-        def feat_pipeline(wav):
-            feats = base.compute_features(wav.data()[0], wav.samp_freq, 1.0)
-            cmvn = Cmvn(base.dim())
-            cmvn.accumulate(feats)
-            cmvn.apply(feats)
-            return compute_deltas(opts, feats)
-        return feat_pipeline
+        # define the rspecifier for reading the features
+        if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
+            feats_rspecifier = (
+                "ark,c,css:"
+                #does the same functionality as archive/steps/make_mfcc.sh
+                "{0}/src/featbin/compute-mfcc-feats --config=archive/conf/mfcc.conf scp:wav.scp ark:-"
+                #does the same functionality as archive/steps/compute_cmvn_stats.sh
+                #NOTE: we have set the cmn-window so big to normalize over the whole audio file
+                " | {0}/src/featbin/apply-cmvn-sliding --cmn-window=1000000000 --center=true ark:- ark:-"
+                #does the same functionality found at archive/steps/train_mono.sh and archive/steps/train_delta.sh
+                " | {0}/src/featbin/add-deltas ark:- ark:-"
+                " |".format(self.KALDI_DIR)
+            )
+        elif self.MODEL_NAME in ["tri3a", "tri4a"]:
+            feats_rspecifier = (
+                #REF
+                #"ark,s,cs:"
+                # "apply-cmvn --utt2spk=ark:data/test/utt2spk scp:data/test/cmvn.scp scp:data/test/feats.scp ark:-"
+                # " | splice-feats ark:- ark:-"
+                # " | transform-feats model/final.mat ark:- ark:- "
+                # " |"
+
+                "ark,s,cs:"
+                "{0}/src/featbin/compute-mfcc-feats --config=archive/conf/mfcc.conf scp:wav.scp ark:-"
+                " | {0}/src/featbin/apply-cmvn-sliding --cmn-window=1000000000 --center=true ark:- ark:-"
+                " | {0}/src/featbin/splice-feats ark:- ark:-"
+                " | {0}/src/featbin/transform-feats {2}/final.mat ark:- ark:-"
+                " |".format(self.KALDI_DIR, self.BASE_DIR, self.MODEL_DIR)
+            )
+            print(feats_rspecifier)
+
+        return feats_rspecifier
 
 
-    def decode(self, data_path, remove_scp=True):
+    def evaluate(self, data_path, remove_scp=True):
         """
         This method is used to decode a wav file/directory.
         Parameters:
@@ -123,8 +151,7 @@ class Recognizer():
         mfcc_opts.use_energy = False
         mfcc_opts.frame_opts = frame_opts
         #create pipeline
-        pipeline = self.__make_feat_pipeline(Mfcc(mfcc_opts))
-        
+        pipeline = self.__make_feat_pipeline()
         #words of the data
         WORDS = ["صفر", "واحد", "إثنان", "ثلاثة", "أربعة", "خمسة",
                  "ستة", "سبعة", "ثمانية", "تسعة", "التنشيط", "التحويل",
@@ -138,11 +165,10 @@ class Recognizer():
             #write csv header
             fout.write("{},{},{},{}\n".format("Filename", "TrueWord", "Predicted", "Likelihood"))
             correct = 0.
-            #iterate over wav files
-            for key, wav in tqdm(SequentialWaveReader("scp:wav.scp"), total=num_wavs, desc="Decoding"):
+            #iterate over wav features
+            for key, feats in SequentialMatrixReader(pipeline):
                 true_word_id = int(key.split(".")[-1])-1
                 true_word = WORDS[true_word_id]
-                feats = pipeline(wav)
                 out = self.ASR.decode(feats)
                 if num_wavs > 1:
                     fout.write("{},{},{},{}\n".format(key, true_word, out["text"], out["likelihood"]))
@@ -154,18 +180,19 @@ class Recognizer():
                 print("PredictedWord:", out["text"])
                 print("Likelihood:", out["likelihood"])
         #remove wav.scp
-        os.remove("wav.scp")
+        # os.remove("wav.scp")
         return correct/num_wavs
 
 
 
 if __name__ == "__main__":
     #create model
-    model_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words/exp"
-    model_name = "tri1"
-    rec = Recognizer(model_dir, model_name)
+    base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words"
+    model_name = "tri3a"
+    kaldi_dir = "/media/anwar/E/ASR/Kaldi/kaldi"
+    rec = Recognizer(base_dir, model_name, kaldi_dir)
     
     #decode
-    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono/Ammar/S03.10.01.wav"
-    score = rec.decode(path, remove_scp=True)
+    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono/Remon/S01.01.01.wav"
+    score = rec.evaluate(path, remove_scp=True)
     print("Accuracy: {}%".format(score*100))
