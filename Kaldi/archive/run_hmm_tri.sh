@@ -37,5 +37,5 @@ echo
 steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri2 exp/tri2_ali || exit 1
 echo
 
-echo "===== run.sh script is finished ====="
+echo "===== run_hmm_tri.sh script is finished ====="
 echo
