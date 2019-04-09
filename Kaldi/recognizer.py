@@ -17,9 +17,14 @@ class Recognizer():
         This method is used define the class member variables.
         Parameters:
             - model_dir (string): full path where the trained models are located
-            - model_name (string): the name of the model.
-               Kaldi uses these names by convention:
-                * mono         * tri1         * tri2
+            - model_name (string): the name of the model, and they are:
+                * mono: Monophone model
+                * tri1: Triphone Model + ∆
+                * tri2: Triphone model + ∆ ∆
+                * tri2a: Triphone model + LDA + MLLT
+                * tri2b: Triphone model + MMI (NOT YET)
+                * tri3c: Triphone model + MPE (NOT YET)
+                * tri4a: Triphone model + SAT
         This method sets these member variables:
             - MODEL_DIR: same as model_dir
             - MODEL_NAME: same as model_name
@@ -126,7 +131,6 @@ class Recognizer():
                 " |".format(self.KALDI_DIR, self.MODEL_DIR)
             )
         
-        # print(feats_rspecifier)
         return feats_rspecifier
 
 
@@ -178,19 +182,20 @@ class Recognizer():
                 print("PredictedWord:", out["text"])
                 print("Likelihood:", out["likelihood"])
         #remove wav.scp
-        # os.remove("wav.scp")
+        os.remove("wav.scp")
         return correct/num_wavs
 
 
 
 if __name__ == "__main__":
     #create model
-    base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words"
-    model_name = "tri3a"
+    # base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words"
+    base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/Hyprid"
+    model_name = "tri1"
     kaldi_dir = "/media/anwar/E/ASR/Kaldi/kaldi"
     rec = Recognizer(base_dir, model_name, kaldi_dir)
     
     #decode
-    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono/Remon/S01.01.01.wav"
+    path = "/media/anwar/D/Data/ASR/hyprid/Moaz"
     score = rec.evaluate(path, remove_scp=True)
     print("Accuracy: {}%".format(score*100))
