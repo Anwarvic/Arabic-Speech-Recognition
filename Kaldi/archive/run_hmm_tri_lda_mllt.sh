@@ -11,7 +11,7 @@ lm_order=1 # language model order (n-gram quantity) - 1 is enough for our gramma
 echo "***** HMM Triphone Using LDA+MLLT *****"
 echo "===== HMM TRIPHONE 3A TRAINING ====="
 echo
-steps/train_lda_mllt.sh --cmd "$train_cmd" 2000 11000 data/train data/lang exp/tri2_ali exp/tri3a || exit 1
+steps/train_lda_mllt.sh --cmd "$train_cmd" 2000 11000 data/train data/lang exp/tri1_ali exp/tri3a || exit 1
 echo
 echo "===== HMM TRIPHONE 3A DECODING ====="
 echo
@@ -23,5 +23,5 @@ echo
 steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3a exp/tri3a_ali || exit 1
 echo
 
-echo "===== run.sh script is finished ====="
+echo "===== run_hmm_tri_lda_mllt.sh script is finished ====="
 echo
