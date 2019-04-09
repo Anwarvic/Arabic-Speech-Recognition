@@ -22,5 +22,5 @@ echo
 steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono exp/mono_ali || exit 1
 echo
 
-echo "===== run.sh script is finished ====="
+echo "===== run_mono.sh script is finished ====="
 echo
