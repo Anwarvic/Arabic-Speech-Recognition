@@ -10,6 +10,7 @@ from kaldi.feat.window import FrameExtractionOptions
 from kaldi.transform.cmvn import Cmvn
 from kaldi.util.table import SequentialMatrixReader, SequentialWaveReader
 
+
 class Recognizer():
 
     def __init__(self, base_dir, model_name, kaldi_dir):
@@ -18,28 +19,32 @@ class Recognizer():
         Parameters:
             - model_dir (string): full path where the trained models are located
             - model_name (string): the name of the model, and they are:
-                * mono: Monophone model
-                * tri1: Triphone Model + ∆
-                * tri2: Triphone model + ∆ ∆
-                * tri2a: Triphone model + LDA + MLLT
-                * tri2b: Triphone model + MMI (NOT YET)
-                * tri3c: Triphone model + MPE (NOT YET)
-                * tri4a: Triphone model + SAT
+                * mono : Monophone model
+                * tri1 : Triphone Model + ∆
+                * tri2a: tri1 + ∆
+                * tri2b: tri1 + (LDA + MLLT)
+                * tri3a: tri2b + MMI
+                * tri3b: tri2b + Boosted MMI
+                * tri3c: tri2b + MPE
+                * tri3d: tri2b + SAT
+                * tri4a: tri3d + MMI (NOT YET)
         This method sets these member variables:
             - MODEL_DIR: same as model_dir
             - MODEL_NAME: same as model_name
             - ASR: The actual speech recognition object
         """
+        AVAILABLE_MODEL_NAMES = ["mono", "tri1", "tri2a", "tri2b",
+                                "tri3a", "tri3b", "tri3c", "tri3d"]
         self.BASE_DIR = base_dir
         self.MODEL_NAME = model_name.lower()
-        #TODO: assert here
+        assert self.MODEL_NAME in AVAILABLE_MODEL_NAMES, \
+            "The provided model name must be one of these:\n"+ AVAILABLE_MODEL_NAMES
         self.MODEL_DIR = os.path.join(self.BASE_DIR, "exp", self.MODEL_NAME)
         self.KALDI_DIR = kaldi_dir
         self.ASR = self.__initialize_decoder()
 
         
     def __initialize_decoder(self):
-        # if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
         #set decoding options (same as archive/config/decode.conf)
         decoder_opts = LatticeFasterDecoderOptions()
         decoder_opts.beam = 13.0
@@ -52,8 +57,6 @@ class Recognizer():
                 os.path.join(self.MODEL_DIR, "graph", "HCLG.fst"),
                 os.path.join(self.MODEL_DIR, "graph", "words.txt"),
                 decoder_opts=decoder_opts)
-        # else:
-        #     pass
         return asr
 
     
@@ -102,9 +105,10 @@ class Recognizer():
         
         RESOURCES:
         http://kaldi-asr.org/doc/io.html#io_sec_specifiers_both
+        https://github.com/pykaldi/pykaldi/issues/108 (my issue)
         """
         # define the rspecifier for reading the features
-        if self.MODEL_NAME in ["mono", "tri1", "tri2"]:
+        if self.MODEL_NAME in ["mono", "tri1", "tri2a"]:
             feats_rspecifier = (
                 "ark,s,cs:"
                 #does the same functionality as archive/steps/make_mfcc.sh
@@ -116,7 +120,7 @@ class Recognizer():
                 " | {0}/src/featbin/add-deltas ark:- ark:-"
                 " |".format(self.KALDI_DIR)
             )
-        elif self.MODEL_NAME in ["tri3a", "tri4a"]:
+        elif self.MODEL_NAME in ["tri2b", "tri3a", "tri3b", "tri3c", "tri3d"]:
             feats_rspecifier = (
                  "ark,s,cs:"
                  #does the same functionality as archive/steps/make_mfcc.sh
@@ -130,7 +134,7 @@ class Recognizer():
                 " | {0}/src/featbin/transform-feats {1}/final.mat ark:- ark:-"
                 " |".format(self.KALDI_DIR, self.MODEL_DIR)
             )
-        
+        # print(feats_rspecifier)
         return feats_rspecifier
 
 
@@ -189,13 +193,15 @@ class Recognizer():
 
 if __name__ == "__main__":
     #create model
-    # base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words"
-    base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/Hyprid"
-    model_name = "tri1"
+    base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/arabic_corpus_of_isolated_words"
+    # base_dir = "/media/anwar/E/ASR/Kaldi/kaldi/egs/Hyprid"
+    model_name = "tri3d"
     kaldi_dir = "/media/anwar/E/ASR/Kaldi/kaldi"
     rec = Recognizer(base_dir, model_name, kaldi_dir)
     
     #decode
-    path = "/media/anwar/D/Data/ASR/hyprid/Moaz"
+    # path = "/media/anwar/D/Data/ASR/hyprid/Moaz"
+    path = "/media/anwar/D/Data/ASR/IST-Dataset_mono"
     score = rec.evaluate(path, remove_scp=True)
     print("Accuracy: {}%".format(score*100))
+    
