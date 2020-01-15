@@ -378,7 +378,10 @@ You can open the `utils/show_lattice.sh` file and change the `lm_scale` and `aco
 ## Using Model (pyKaldi)
 Now, we have trained our model using our own data. And as we can see, we have got a magnificent results. Now, let's see how to use our trained model to recognizer actual wav files. To do so, we have to follow these steps:
 
-- Intall pyKaldi from source using this [link](https://github.com/pykaldi/pykaldi#from-source). Just note that I don't recommend using Virtual Environment. I've struggled a lot when I used one!!
+- Intall pyKaldi:
+	- Till today (15/01/2020), `pykaldi` required `python3.6` and `conda 4.6.14` to be installed properly. If you have a newer versions, then you should degrade them first before installing pykaldi. Then, run `conda install -c pykaldi pykaldi.
+	- If you don't want to install the whole Anaconda, then you can install pykaldi from source using this [link](https://github.com/pykaldi/pykaldi#from-source).
+	- Note that I don't recommend using Virtual Environment. I've struggled a lot when I used one!! 
 - Use the provided python script `recognizer.py` to decode a given wav or a directory of wavs.
 
 Let's see how we are going to do that, you can recored some wav files with sample rate > 16000 and test it out. I have done that for you, you can use these recoreds to test it out.  It can be downloaded from [here](http://www.mediafire.com/file/3ixb917387zfr7q/Ammar.tar.xz/file).
